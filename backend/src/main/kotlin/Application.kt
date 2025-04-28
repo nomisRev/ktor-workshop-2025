@@ -9,6 +9,8 @@ import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
+import kotlinx.datetime.Instant
+import kotlinx.serialization.Serializable
 
 fun main(args: Array<String>) = EngineMain.main(args)
 
@@ -23,3 +25,6 @@ fun Application.module() {
         }
     }
 }
+
+@Serializable
+data class Customer(val id: Int, val name: String, val email: String, val createdAt: Instant)
