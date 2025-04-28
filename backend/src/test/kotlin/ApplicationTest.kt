@@ -3,14 +3,15 @@ package org.jetbrains
 import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.*
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.testing.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
 import org.junit.AfterClass
-import org.junit.ClassRule
 import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class ApplicationTest {
     @Test
@@ -34,22 +35,43 @@ class ApplicationTest {
 
     @Test
     fun `get all data`(): Unit = runBlocking {
-
+        val response = client.get("/data")
+        assert(response.status == HttpStatusCode.OK)
+        val data = response.body<List<Customer>>()
+        assert(data.size == fakeData.size)
     }
 
     @Test
     fun `post data instance`(): Unit = runBlocking {
-
+        val response = client.post("/data") {
+            contentType(ContentType.Application.Json)
+            setBody(Customer(123, "A", "a@a.com", Clock.System.now()))
+        }
+        assertEquals(HttpStatusCode.Created, response.status)
+        assertEquals("Data added successfully", response.bodyAsText())
     }
 
     @Test
     fun `put data instance`(): Unit = runBlocking {
-
+        val updatedDataResponse = client.put("/data") {
+            contentType(ContentType.Application.Json)
+            val customer = fakeData.first()
+            setBody(customer.copy(name = "Mr. ${customer.name}"))
+        }
+        assertEquals(HttpStatusCode.OK, updatedDataResponse.status)
+        assertEquals("Data updated successfully", updatedDataResponse.bodyAsText())
     }
 
     @Test
     fun `delete data instance`(): Unit = runBlocking {
+        val response1 = client.delete("/data/1")
+        assert(response1.status == HttpStatusCode.OK)
+        assert(response1.bodyAsText() == "Data deleted successfully")
 
+
+        val response2 = client.get("/data/1")
+        // Assertions to confirm the successful fetching of the updated Data instances
+        assert(response2.status == HttpStatusCode.NotFound)
     }
 
     companion object {
