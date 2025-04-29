@@ -17,9 +17,9 @@ import org.jetbrains.customers.CreateBooking
 import org.jetbrains.customers.CreateCustomer
 import org.jetbrains.customers.Customer
 import org.jetbrains.customers.CustomerRepository
+import org.junit.AfterClass
 import org.jetbrains.customers.CustomerWithBooking
 import org.jetbrains.customers.UpdateCustomer
-import org.junit.AfterClass
 import kotlin.test.Test
 
 class ApplicationTest {
