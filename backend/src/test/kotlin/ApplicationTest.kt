@@ -79,6 +79,7 @@ class ApplicationTest {
 
         val app = TestApplication {
             application { module() }
+            customers = fakeData
         }
 
         val client = app.createClient {
