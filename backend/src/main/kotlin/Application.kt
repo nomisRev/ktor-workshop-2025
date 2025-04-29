@@ -23,6 +23,7 @@ fun Application.module() {
         get("/") {
             call.respondText("Hello World!")
         }
+        configureCustomerRoutes()
     }
 }
 

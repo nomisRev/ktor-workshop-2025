@@ -27,15 +27,9 @@ class ApplicationTest {
         assert(response.body<Map<String, String>>() == mapOf("hello" to "world"))
     }
 
-    val fakeData = mutableListOf(
-        Customer(1, "Anton", "anton@jb.com", Clock.System.now()),
-        Customer(2, "Leonid", "leonid@jb.com", Clock.System.now()),
-        Customer(3, "Simon", "simon@jb.com", Clock.System.now()),
-    )
-
     @Test
     fun `get all data`(): Unit = runBlocking {
-        val response = client.get("/data")
+        val response = client.get("/customers")
         assert(response.status == HttpStatusCode.OK)
         val data = response.body<List<Customer>>()
         assert(data.size == fakeData.size)
@@ -43,7 +37,7 @@ class ApplicationTest {
 
     @Test
     fun `post data instance`(): Unit = runBlocking {
-        val response = client.post("/data") {
+        val response = client.post("/customers") {
             contentType(ContentType.Application.Json)
             setBody(Customer(123, "A", "a@a.com", Clock.System.now()))
         }
@@ -53,7 +47,8 @@ class ApplicationTest {
 
     @Test
     fun `put data instance`(): Unit = runBlocking {
-        val updatedDataResponse = client.put("/data") {
+        val user = fakeData.first()
+        val updatedDataResponse = client.put("/customers/${user.id}") {
             contentType(ContentType.Application.Json)
             val customer = fakeData.first()
             setBody(customer.copy(name = "Mr. ${customer.name}"))
@@ -64,19 +59,27 @@ class ApplicationTest {
 
     @Test
     fun `delete data instance`(): Unit = runBlocking {
-        val response1 = client.delete("/data/1")
+        val response1 = client.delete("/customers/1")
         assert(response1.status == HttpStatusCode.OK)
         assert(response1.bodyAsText() == "Data deleted successfully")
 
-
-        val response2 = client.get("/data/1")
+        val response2 = client.get("/customers/1")
         // Assertions to confirm the successful fetching of the updated Data instances
         assert(response2.status == HttpStatusCode.NotFound)
     }
 
     companion object {
+        val fakeData = mutableListOf(
+            Customer(1, "Anton", "anton@jb.com", Clock.System.now()),
+            Customer(2, "Leonid", "leonid@jb.com", Clock.System.now()),
+            Customer(3, "Simon", "simon@jb.com", Clock.System.now()),
+        )
+
         val app = TestApplication {
-            application { module() }
+            application {
+                module()
+                customers = fakeData //FIXME: this is another hack
+            }
         }
 
         val client = app.createClient {
