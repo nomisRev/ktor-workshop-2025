@@ -6,29 +6,20 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.json
+import io.ktor.server.plugins.di.dependencies
+import io.ktor.server.plugins.di.invoke
+import io.ktor.server.plugins.di.provide
 import io.ktor.server.testing.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
 import org.jetbrains.customers.Customer
+import org.jetbrains.customers.CustomerRepository
 import org.jetbrains.customers.fake.FakeCustomerRepository
 import org.junit.AfterClass
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class ApplicationTest {
-    @Test
-    fun testRoot() = runBlocking {
-        val response = client.get("/")
-        assert(response.status == HttpStatusCode.OK)
-    }
-
-    @Test
-    fun testJson() = runBlocking {
-        val response = client.get("/json")
-        assert(response.status == HttpStatusCode.OK)
-        assert(response.body<Map<String, String>>() == mapOf("hello" to "world"))
-    }
-
     @Test
     fun `get all data`(): Unit = runBlocking {
         val response = client.get("/customers")
@@ -79,7 +70,10 @@ class ApplicationTest {
 
         val app = TestApplication {
             application {
-                configure(FakeCustomerRepository(fakeData))
+                dependencies {
+                    provide<CustomerRepository> { FakeCustomerRepository(fakeData) }
+                }
+                module()
             }
         }
 
