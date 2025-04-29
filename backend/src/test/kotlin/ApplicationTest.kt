@@ -9,6 +9,10 @@ import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.testing.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
+import org.jetbrains.customers.CreateCustomer
+import org.jetbrains.customers.Customer
+import org.jetbrains.customers.UpdateCustomer
+import org.jetbrains.customers.fake.FakeCustomerRepository
 import org.junit.AfterClass
 import kotlin.test.Test
 
@@ -66,8 +70,7 @@ class ApplicationTest {
 
         val app = TestApplication {
             application {
-                module()
-                customers = fakeData //FIXME: this is another hack
+                configure(FakeCustomerRepository(fakeData))
             }
         }
 
