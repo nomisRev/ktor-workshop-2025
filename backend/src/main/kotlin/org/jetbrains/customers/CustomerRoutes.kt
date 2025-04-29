@@ -2,21 +2,25 @@ package org.jetbrains.customers
 
 import io.ktor.http.*
 import io.ktor.server.application.*
+import io.ktor.server.plugins.di.dependencies
+import io.ktor.server.plugins.di.provideDelegate
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.routing.delete
 
-fun Application.configureCustomerRoutes(repository: CustomerRepository) {
+fun Application.configureCustomerRoutes() {
+    val repository: CustomerRepository by dependencies
+
     routing {
         route("/customers") {
             get {
                 call.respond(repository.findAll())
             }
             post {
-                val customer = call.receive<Customer>()
-                repository.save(customer)
-                call.respond(HttpStatusCode.Created, "Data added successfully")
+                val newCustomer = call.receive<CreateCustomer>()
+                val customer = repository.save(newCustomer)
+                call.respond(HttpStatusCode.Created, customer)
             }
             get("/{customerId}") {
                 call.parameters["customerId"]?.let {
@@ -30,25 +34,21 @@ fun Application.configureCustomerRoutes(repository: CustomerRepository) {
             }
             put("/{customerId}") {
                 val customerId = call.parameters["customerId"]?.toInt()
-
-                val updatedCustomer = call.receive<Customer>()
+                val updatedCustomer = call.receive<UpdateCustomer>()
                 if (customerId != null) {
-                    val oldCustomer = repository.find(customerId)
-                    if (oldCustomer != null) {
-                        repository.delete(oldCustomer)
-                        repository.save(updatedCustomer)
-                        call.respond(status = HttpStatusCode.OK, message = "Data updated successfully")
+                    val updated = repository.update(customerId, updatedCustomer)
+                    if (updated != null) {
+                        call.respond(HttpStatusCode.OK, updated)
                     } else {
-                        call.respond(status = HttpStatusCode.NotFound, message = "Data to update not found")
+                        call.respond(HttpStatusCode.NotFound, "Data to update not found")
                     }
                 }
             }
             delete("/{customerId}") {
                 val customerId = call.parameters["customerId"]?.toInt()
                 if (customerId != null) {
-                    val deleted = repository.find(customerId)
-                    if (deleted != null) {
-                        repository.delete(deleted)
+                    val deleted = repository.delete(customerId)
+                    if (deleted) {
                         call.respond(status = HttpStatusCode.OK, message = "Data deleted successfully")
                     } else {
                         call.respond(status = HttpStatusCode.NotFound, message = "Data to delete not found")

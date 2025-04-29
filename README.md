@@ -15,7 +15,7 @@ Here are some useful links to get you started:
 - branch02: First tests—implementation
 - branch03: CRUD implementation
 - branch04: Adding structure
-- branch05: Adding DI
+- branch05: Adding DI & Configuration
 - branch06: Database access with Exposed - basics
 - branch07: Database access with Exposed - adding relations
 - branch08: Database access with Exposed - adding entities
