@@ -21,7 +21,10 @@ class CustomerRepositoryImpl : CustomerRepository {
         TODO("Not yet implemented")
     }
 
-    override fun update(id: Int, updateCustomer: UpdateCustomer): Customer? {
+    override fun update(
+        id: Int,
+        updateCustomer: UpdateCustomer
+    ): Customer? {
         TODO("Not yet implemented")
     }
 
