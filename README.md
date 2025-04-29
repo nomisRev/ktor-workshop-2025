@@ -14,12 +14,13 @@ Here are some useful links to get you started:
 - branch01: First tests—empty
 - branch02: First tests—implementation
 - branch03: CRUD implementation
-- branch04: Adding structure and DI
-- branch05: Database access with Exposed - basics
-- branch06: Database access with Exposed - adding relations
-- branch07: Database access with Exposed - adding entities
-- (branch08: Integration testing with TestContainers)
-- branch09: Authentication s
+- branch04: Adding structure
+- branch05: Adding DI
+- branch06: Database access with Exposed - basics
+- branch07: Database access with Exposed - adding relations
+- branch08: Database access with Exposed - adding entities
+- (branch09: Integration testing with TestContainers)
+- branch10: Authentication with OAuth2
 
 ## Building & Running
 
