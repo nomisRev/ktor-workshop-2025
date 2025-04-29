@@ -12,12 +12,12 @@ import io.ktor.server.plugins.di.provide
 import io.ktor.server.testing.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
+import org.jetbrains.customers.CreateCustomer
 import org.jetbrains.customers.Customer
 import org.jetbrains.customers.CustomerRepository
-import org.jetbrains.customers.fake.FakeCustomerRepository
+import org.jetbrains.customers.UpdateCustomer
 import org.junit.AfterClass
 import kotlin.test.Test
-import kotlin.test.assertEquals
 
 class ApplicationTest {
     @Test
@@ -32,22 +32,25 @@ class ApplicationTest {
     fun `post data instance`(): Unit = runBlocking {
         val response = client.post("/customers") {
             contentType(ContentType.Application.Json)
-            setBody(Customer(123, "A", "a@a.com", Clock.System.now()))
+            setBody(CreateCustomer("A", "a@a.com"))
         }
-        assertEquals(HttpStatusCode.Created, response.status)
-        assertEquals("Data added successfully", response.bodyAsText())
+        assert(response.status == HttpStatusCode.Created)
+        val customer = response.body<Customer>()
+        assert(customer.name == "A")
+        assert(customer.email == "a@a.com")
     }
 
     @Test
     fun `put data instance`(): Unit = runBlocking {
-        val user = fakeData.first()
-        val updatedDataResponse = client.put("/customers/${user.id}") {
+        val customer = fakeData.first()
+        val response = client.put("/customers/${customer.id}") {
             contentType(ContentType.Application.Json)
-            val customer = fakeData.first()
-            setBody(customer.copy(name = "Mr. ${customer.name}"))
+            setBody(UpdateCustomer(name = "Mr. ${customer.name}"))
         }
-        assertEquals(HttpStatusCode.OK, updatedDataResponse.status)
-        assertEquals("Data updated successfully", updatedDataResponse.bodyAsText())
+        assert(response.status == HttpStatusCode.OK)
+        val updated = response.body<Customer>()
+        assert(updated.name == "Mr. ${customer.name}")
+        assert(updated.email == customer.email)
     }
 
     @Test

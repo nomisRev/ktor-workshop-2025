@@ -4,7 +4,7 @@ ktor:
             - org.jetbrains.ApplicationKt.configure
             - org.jetbrains.ApplicationKt.module
     deployment:
-    port: "$PORT:8000"
+      port: "$PORT:8000"
 config:
     database:
         driverClassName: "$DB_DRIVER_CLASS_NAME:org.h2.Driver"

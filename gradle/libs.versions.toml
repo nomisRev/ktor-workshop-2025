@@ -8,12 +8,13 @@ postgresql = "42.7.1"
 testcontainers = "1.19.3"
 kotlinx-datetime = "0.5.0"
 langchain4j = "1.0.0-beta2"
-flyway = "10.10.0"
+flyway = "11.8.0"
 micrometer = "1.12.2"
 androidx-lifecycle = "2.8.4"
 compose-multiplatform = "1.7.3"
 kotlinx-coroutines = "1.9.0"
 langchain4j-kotlin = "0.1.8"
+h2database = "2.3.232"
 
 [libraries]
 kotlinx-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
@@ -56,6 +57,7 @@ hikari = { module = "com.zaxxer:HikariCP", version.ref = "hikari" }
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
 flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
 flyway-postgresql = { module = "org.flywaydb:flyway-database-postgresql", version.ref = "flyway" }
+h2database = { module = "com.h2database:h2", version.ref = "h2database" }
 
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 
@@ -71,7 +73,8 @@ exposed = [
     "exposed-jdbc",
     "exposed-kotlin-datetime",
     "hikari",
-    "postgresql"
+    "postgresql",
+    "h2database"
 ]
 flyway = ["flyway-core", "flyway-postgresql"]
 ktor-client = [
