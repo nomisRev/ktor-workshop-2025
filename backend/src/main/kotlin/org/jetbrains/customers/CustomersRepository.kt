@@ -5,17 +5,16 @@ import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.plugins.di.invoke
 import io.ktor.server.plugins.di.provide
 import io.ktor.server.plugins.di.resolve
+import kotlinx.datetime.Clock
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.insertReturning
 import org.jetbrains.exposed.sql.kotlin.datetime.CurrentTimestamp
 import org.jetbrains.exposed.sql.kotlin.datetime.timestamp
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.updateReturning
 
 fun Application.customerDataModule() {
     dependencies {
@@ -46,40 +45,37 @@ interface CustomerRepository {
 
 class CustomerRepositoryImpl(private val database: Database) : CustomerRepository {
     override fun findAll(): List<CustomerWithBooking> = transaction(database) {
-        Customers.selectAll()
-            .map { row -> row.toCustomerWithBooking() }
+        CustomerDAO.all().map { it.toCustomerWithBooking() }
     }
 
     override fun createBooking(customerId: Int, amount: Double): Booking =
         transaction(database) {
-            Bookings.insertReturning {
-                it[Bookings.customerId] = customerId
-                it[Bookings.bookingDate] = bookingDate
-                it[Bookings.amount] = amount
-            }.single().toBooking()
+            BookingsDAO.new {
+                bookingDate = Clock.System.now()
+                customer = CustomerDAO[customerId]
+                this.amount = amount
+            }.toBooking()
         }
 
     override fun save(create: CreateCustomer): Customer = transaction(database) {
-        Customers.insertReturning { insert ->
-            insert[Customers.name] = name
-            insert[Customers.email] = email
-        }.single().toCustomer()
+        CustomerDAO.new {
+            name = create.name
+            email = create.email
+            createdAt = Clock.System.now()
+        }.toCustomer()
     }
 
     override fun find(id: Int): CustomerWithBooking? =
         transaction(database) {
-            Customers.selectAll()
-                .where { Customers.id eq id }
-                .singleOrNull()
-                ?.toCustomerWithBooking()
+            CustomerDAO.findById(id)?.toCustomerWithBooking()
         }
 
     override fun update(id: Int, updateCustomer: UpdateCustomer): Customer? =
         transaction(database) {
-            Customers.updateReturning(where = { Customers.id eq id }) { update ->
-                if (updateCustomer.name != null) update[Customers.name] = updateCustomer.name
-                if (updateCustomer.email != null) update[Customers.email] = updateCustomer.email
-            }.singleOrNull()?.toCustomer()
+            CustomerDAO.findByIdAndUpdate(id) {
+                if (updateCustomer.name != null) it.name = updateCustomer.name
+                if (updateCustomer.email != null) it.email = updateCustomer.email
+            }?.toCustomer()
         }
 
     override fun delete(id: Int): Boolean =
