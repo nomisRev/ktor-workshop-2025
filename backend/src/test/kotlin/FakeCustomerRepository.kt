@@ -1,21 +1,35 @@
 package org.jetbrains
 
 import kotlinx.datetime.Clock
+import org.jetbrains.customers.Booking
 import org.jetbrains.customers.CreateCustomer
 import org.jetbrains.customers.Customer
 import org.jetbrains.customers.CustomerRepository
+import org.jetbrains.customers.CustomerWithBooking
 import org.jetbrains.customers.UpdateCustomer
 import kotlin.random.Random
 
-class FakeCustomerRepository(private var storage: MutableList<Customer> = mutableListOf()) : CustomerRepository {
+class FakeCustomerRepository(private var storage: MutableList<CustomerWithBooking> = mutableListOf()) : CustomerRepository {
     private val seed = Random.Default
 
-    override suspend fun findAll(): List<Customer> = storage
+    override suspend fun findAll(): List<CustomerWithBooking> = storage
 
     override suspend fun save(create: CreateCustomer): Customer {
-        val customer = Customer(seed.nextInt(), create.name, create.email, Clock.System.now())
+        val customer = CustomerWithBooking(seed.nextInt(), create.name, create.email, Clock.System.now(), emptyList())
         storage.add(customer)
-        return customer
+        return Customer(customer.id, customer.name, customer.email, customer.createdAt)
+    }
+
+    override suspend fun createBooking(id: Int, amount: Double): Booking {
+        val customer = storage.single { it.id == id }
+        val booking = Booking(seed.nextInt(), id, Clock.System.now(), amount)
+        storage.remove(customer)
+        storage.add(customer.copy(bookings = customer.bookings + booking))
+        return booking
+    }
+
+    override suspend fun find(id: Int): CustomerWithBooking? {
+        return storage.find { it.id == id }
     }
 
     override suspend fun delete(id: Int): Boolean {
@@ -29,14 +43,14 @@ class FakeCustomerRepository(private var storage: MutableList<Customer> = mutabl
     ): Customer? {
         val customer = storage.singleOrNull { it.id == id } ?: return null
         storage.remove(customer)
-        val updated = Customer(
+        val updated = CustomerWithBooking(
             id,
             updateCustomer.name ?: customer.name,
             updateCustomer.email ?: customer.email,
-            customer.createdAt
+            customer.createdAt,
+            customer.bookings
         )
         storage.add(updated)
-        return updated
+        return Customer(updated.id, updated.name, updated.email, updated.createdAt)
     }
-
 }
