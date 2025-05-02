@@ -10,11 +10,8 @@ import io.ktor.server.plugins.di.provide
 import kotlinx.serialization.Serializable
 import org.flywaydb.core.Flyway
 import org.flywaydb.core.api.output.MigrateResult
-import org.jetbrains.customers.Customers
 import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.transactions.transaction
 import javax.sql.DataSource
 
 @Serializable

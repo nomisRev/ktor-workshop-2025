@@ -49,11 +49,16 @@ fun Application.configureCustomerRoutes() {
                 if (customerId != null) {
                     val deleted = repository.delete(customerId)
                     if (deleted) {
-                        call.respond(status = HttpStatusCode.OK, message = "Data deleted successfully")
+                        call.respond(HttpStatusCode.OK, "Data deleted successfully")
                     } else {
-                        call.respond(status = HttpStatusCode.NotFound, message = "Data to delete not found")
+                        call.respond(HttpStatusCode.NotFound, "Data to delete not found")
                     }
                 }
+            }
+            post("/bookings/{customerId}/create") {
+                val request = call.receive<CreateBooking>()
+                val booking = repository.createBooking(request.customerId, request.amount)
+                call.respond(HttpStatusCode.Created, booking)
             }
         }
     }

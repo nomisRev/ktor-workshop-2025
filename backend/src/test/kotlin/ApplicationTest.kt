@@ -12,9 +12,12 @@ import io.ktor.server.plugins.di.provide
 import io.ktor.server.testing.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
+import org.jetbrains.customers.Booking
+import org.jetbrains.customers.CreateBooking
 import org.jetbrains.customers.CreateCustomer
 import org.jetbrains.customers.Customer
 import org.jetbrains.customers.CustomerRepository
+import org.jetbrains.customers.CustomerWithBooking
 import org.jetbrains.customers.UpdateCustomer
 import org.junit.AfterClass
 import kotlin.test.Test
@@ -24,7 +27,7 @@ class ApplicationTest {
     fun `get all data`(): Unit = runBlocking {
         val response = client.get("/customers")
         assert(response.status == HttpStatusCode.OK)
-        val data = response.body<List<Customer>>()
+        val data = response.body<List<CustomerWithBooking>>()
         assert(data.size == fakeData.size)
     }
 
@@ -54,6 +57,19 @@ class ApplicationTest {
     }
 
     @Test
+    fun `create booking`(): Unit = runBlocking {
+        val customer = fakeData.first()
+        val response = client.post("/customers/bookings/${customer.id}/create") {
+            contentType(ContentType.Application.Json)
+            setBody(CreateBooking(customer.id, 100.0))
+        }
+        assert(response.status == HttpStatusCode.Created)
+        val booking = response.body<Booking>()
+        assert(booking.customerId == customer.id)
+        assert(booking.amount == 100.0)
+    }
+
+    @Test
     fun `delete data instance`(): Unit = runBlocking {
         val response1 = client.delete("/customers/1")
         assert(response1.status == HttpStatusCode.OK)
@@ -66,9 +82,9 @@ class ApplicationTest {
 
     companion object {
         val fakeData = mutableListOf(
-            Customer(1, "Anton", "anton@jb.com", Clock.System.now()),
-            Customer(2, "Leonid", "leonid@jb.com", Clock.System.now()),
-            Customer(3, "Simon", "simon@jb.com", Clock.System.now()),
+            CustomerWithBooking(1, "Anton", "anton@jb.com", Clock.System.now(), emptyList()),
+            CustomerWithBooking(2, "Leonid", "leonid@jb.com", Clock.System.now(), emptyList()),
+            CustomerWithBooking(3, "Simon", "simon@jb.com", Clock.System.now(), emptyList()),
         )
 
         val app = TestApplication {

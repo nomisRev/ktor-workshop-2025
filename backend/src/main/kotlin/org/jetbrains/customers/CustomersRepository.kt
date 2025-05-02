@@ -18,7 +18,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.updateReturning
 
 fun Application.customerDataModule() {
-    dependencies.invoke {
+    dependencies {
         provide<CustomerRepository> { CustomerRepositoryImpl(resolve()) }
     }
 }
@@ -29,34 +29,54 @@ object Customers : IntIdTable("customers", "customer_id") {
     val createdAt = timestamp("created_at").defaultExpression(CurrentTimestamp)
 }
 
+object Bookings : IntIdTable("bookings", "booking_id") {
+    val customerId = reference("customer_id", Customers)
+    val bookingDate = timestamp("booking_date").defaultExpression(CurrentTimestamp)
+    val amount = double("amount")
+}
+
 interface CustomerRepository {
-    fun findAll(): List<Customer>
+    fun findAll(): List<CustomerWithBooking>
     fun save(create: CreateCustomer): Customer
-    fun find(id: Int): Customer?
+    fun createBooking(id: Int, amount: Double): Booking
+    fun find(id: Int): CustomerWithBooking?
     fun update(id: Int, updateCustomer: UpdateCustomer): Customer?
     fun delete(id: Int): Boolean
 }
 
 class CustomerRepositoryImpl(private val database: Database) : CustomerRepository {
-    override fun findAll(): List<Customer> = transaction(database) {
-        Customers.selectAll().map { it.toCustomer() }
+    override fun findAll(): List<CustomerWithBooking> = transaction(database) {
+        Customers.selectAll()
+            .map { row -> row.toCustomerWithBooking() }
     }
 
+    override fun createBooking(customerId: Int, amount: Double): Booking =
+        transaction(database) {
+            Bookings.insertReturning {
+                it[Bookings.customerId] = customerId
+                it[Bookings.bookingDate] = bookingDate
+                it[Bookings.amount] = amount
+            }.single().toBooking()
+        }
+
     override fun save(create: CreateCustomer): Customer = transaction(database) {
-        Customers.insertReturning {insert ->
+        Customers.insertReturning { insert ->
             insert[Customers.name] = name
             insert[Customers.email] = email
         }.single().toCustomer()
     }
 
-    override fun find(id: Int): Customer? =
+    override fun find(id: Int): CustomerWithBooking? =
         transaction(database) {
-            Customers.selectAll().where { Customers.id eq id }.singleOrNull()?.toCustomer()
+            Customers.selectAll()
+                .where { Customers.id eq id }
+                .singleOrNull()
+                ?.toCustomerWithBooking()
         }
 
     override fun update(id: Int, updateCustomer: UpdateCustomer): Customer? =
         transaction(database) {
-            Customers.updateReturning(where = { Customers.id eq id }) {update ->
+            Customers.updateReturning(where = { Customers.id eq id }) { update ->
                 if (updateCustomer.name != null) update[Customers.name] = updateCustomer.name
                 if (updateCustomer.email != null) update[Customers.email] = updateCustomer.email
             }.singleOrNull()?.toCustomer()
@@ -72,4 +92,26 @@ class CustomerRepositoryImpl(private val database: Database) : CustomerRepositor
             email = this[Customers.email],
             createdAt = this[Customers.createdAt],
         )
+
+    private fun ResultRow.toBooking(): Booking =
+        Booking(
+            id = this[Bookings.id].value,
+            customerId = this[Bookings.customerId].value,
+            bookingDate = this[Bookings.bookingDate],
+            amount = this[Bookings.amount],
+        )
+
+    private fun ResultRow.toCustomerWithBooking(): CustomerWithBooking {
+        val customerId = this[Customers.id].value
+        val bookings = Bookings.selectAll()
+            .where { Bookings.customerId eq customerId }
+            .map { it.toBooking() }
+        return CustomerWithBooking(
+            id = customerId,
+            name = this[Customers.name],
+            email = this[Customers.email],
+            createdAt = this[Customers.createdAt],
+            bookings = bookings
+        )
+    }
 }
