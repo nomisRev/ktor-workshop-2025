@@ -6,22 +6,18 @@ import io.ktor.server.application.install
 import io.ktor.server.config.property
 import io.ktor.server.netty.EngineMain
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.server.plugins.di.dependencies
-import io.ktor.server.plugins.di.invoke
-import io.ktor.server.plugins.di.provide
 import io.ktor.server.routing.routing
-import org.jetbrains.customers.CustomerRepository
-import org.jetbrains.customers.CustomerRepositoryImpl
+import org.jetbrains.app.configureChatRoutes
 import org.jetbrains.customers.configureCustomerRoutes
 import org.jetbrains.customers.customerDataModule
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.plugins.DbConfig
 import org.jetbrains.plugins.setupDatabase
+import org.jetbrains.security.configureSecurity
 
 fun main(args: Array<String>) = EngineMain.main(args)
 
 fun Application.configure() {
-    setupDatabase(property<DbConfig>("config.database"))
+    setupDatabase(property("database"))
+    configureSecurity(property("auth"))
     customerDataModule()
 }
 
@@ -29,5 +25,6 @@ fun Application.module() {
     install(ContentNegotiation) { json() }
     routing {
         configureCustomerRoutes()
+        configureChatRoutes()
     }
 }

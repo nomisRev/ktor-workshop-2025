@@ -19,8 +19,7 @@ Here are some useful links to get you started:
 - branch06: Database access with Exposed - basics
 - branch07: Database access with Exposed - adding relations
 - branch08: Database access with Exposed - adding entities
-- (branch09: Integration testing with TestContainers)
-- branch10: Authentication with OAuth2
+- branch09: Authentication with OAuth2
 
 ## Building & Running
 
