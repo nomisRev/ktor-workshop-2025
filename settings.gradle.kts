@@ -12,3 +12,4 @@ dependencyResolutionManagement {
 }
 
 include(":backend")
+include(":app")
