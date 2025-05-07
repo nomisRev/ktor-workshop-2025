@@ -14,5 +14,17 @@ database:
             locations: "$FLYWAY_LOCATIONS:classpath:db/migration"
             baselineOnMigrate: "$FLYWAY_BASELINE_ON_MIGRATE:true"
 auth:
+  authorizeUrl: "$AUTH_URL:https://accounts.google.com/o/oauth2/auth"
+  accessTokenUrl: "$AUTH_TOKEN_URL:https://oauth2.googleapis.com/token"
+  clientId: "$AUTH_CLIENT_ID:ktor-app"
+  clientSecret: "$AUTH_CLIENT_SECRET:<empty>"
+  redirectUrl: "$AUTH_REDIRECT_URL:http://localhost:8000/callback"
   encryptionKey: "$AUTH_SESSION_CRYPT_KEY:b324d8a737c6cb016f2c1b6e3501ecb2"
   signKey: "$AUTH_SESSION_SIGN_KEY:59aa1b97d4baf65e1a95101aa35cff307fb9c9e653918f14e33736c2bd3362ca"
+ai:
+    baseUrl: "$AI_BASE_URL:http://localhost:11434"
+    apiKey: "$AI_API_KEY:not-needed-for-local-llama"
+    model: "$AI_MODEL:gpt-4o-mini"
+    tokenizer: "$AI_TOKENIZER:all-minilm-l6-v2-q-tokenizer.json"
+    maxSegmentSizeInTokens: "$AI_MAX_SEGMENT_SIZE:550"
+    maxOverlapSizeInTokens: "$AI_MAX_OVERLAP_SIZE:50"

@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import org.jetbrains.chat.repository.ChatRepository
+import org.jetbrains.chat.repository.WebSocketMessage
 
 data class ChatState(
     val messages: List<Message> = emptyList(),
@@ -53,23 +54,26 @@ class ChatViewModel(private val repository: ChatRepository, private val scope: C
         repository.sendMessage(content)
     }
 
-    private fun processIncomingMessage(text: String) {
+    private fun processIncomingMessage(message: WebSocketMessage) {
         _state.update { state ->
             val lastMessageOrNull = state.messages.lastOrNull()
             if (lastMessageOrNull?.type == MessageType.AI) {
-                val isComplete = text == "### END ###"
-                val updatedContent =
-                    if (isComplete) lastMessageOrNull.content else lastMessageOrNull.content + text
+                when (message) {
+                    WebSocketMessage.AnswerEnd -> state.copy(
+                        messages = state.messages.dropLast(1) + lastMessageOrNull.copy(isComplete = true),
+                        isLoading = false
+                    )
 
-                state.copy(
-                    messages =
-                        state.messages.dropLast(1) +
-                            lastMessageOrNull.copy(content = updatedContent, isComplete = true),
-                    isLoading = false,
-                )
+                    is WebSocketMessage.Error -> state.copy(isLoading = false, error = message.text)
+                    is WebSocketMessage.PartialAnswer -> state.copy(
+                        messages = state.messages.dropLast(1) + lastMessageOrNull.copy(content = lastMessageOrNull.content + message.token),
+                        isLoading = true
+                    )
+                }
             } else {
-                val newMessage = Message(content = text, type = MessageType.AI, isComplete = false)
-                state.copy(messages = state.messages + newMessage)
+                TODO()
+//                val newMessage = Message(content = message, type = MessageType.AI, isComplete = false)
+//                state.copy(messages = state.messages + newMessage)
             }
         }
     }
