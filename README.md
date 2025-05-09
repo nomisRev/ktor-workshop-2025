@@ -19,7 +19,9 @@ Here are some useful links to get you started:
 - branch06: Database access with Exposed - adding relations
 - branch07: Database access with Exposed - adding entities
 - (branch08: Integration testing with TestContainers)
-- branch09: Authentication s
+- branch09: Authentication with OAUth2, sessions and JWT
+- branch10: WebSocket & SSE with KotlinX Serialization
+- branch 11: Finished workshop project
 
 ## Building & Running
 
