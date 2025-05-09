@@ -14,11 +14,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.websocket.WebSockets
-import kotlinx.coroutines.launch
 import org.jetbrains.chat.repository.WebSocketChatRepository
 import org.jetbrains.chat.viewmodel.ChatViewModel
 import org.jetbrains.chat.viewmodel.Message
@@ -167,14 +171,19 @@ private fun MessageInput(
     modifier: Modifier = Modifier,
 ) {
     var text by remember { mutableStateOf("") }
-    val scope = rememberCoroutineScope()
 
     Row(modifier = modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         TextField(
             value = text,
             onValueChange = { text = it },
             placeholder = { Text("Type a message...") },
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f).onKeyEvent {
+                if (it.key == Key.Enter && it.type == KeyEventType.KeyDown) {
+                    onSendMessage(text)
+                    text = ""
+                    true
+                } else false
+            },
             enabled = !isLoading,
             singleLine = true,
         )
@@ -184,10 +193,8 @@ private fun MessageInput(
         IconButton(
             onClick = {
                 if (text.isNotBlank()) {
-                    scope.launch {
-                        onSendMessage(text)
-                        text = ""
-                    }
+                    onSendMessage(text)
+                    text = ""
                 }
             },
             enabled = text.isNotBlank() && !isLoading,

@@ -1,21 +1,11 @@
 package org.jetbrains.chat.repository
 
 import io.ktor.client.HttpClient
-import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
+import io.ktor.client.plugins.websocket.webSocket
 import io.ktor.client.plugins.websocket.webSocketSession
-import io.ktor.http.HttpMethod
-import io.ktor.websocket.Frame
-import io.ktor.websocket.readText
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.consumeAsFlow
-import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.isActive
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
 
 interface ChatRepository {
     fun connect(): Flow<String>
@@ -28,17 +18,17 @@ class WebSocketChatRepository(
     private val baseUrl: String,
     private val scope: CoroutineScope,
 ) : ChatRepository {
-    private var session: DefaultClientWebSocketSession? = null
-
     override fun connect(): Flow<String> = flow {
-        emit("Hello, I am a stub AI chat! I cannot really reply anything useful. I will ping you every second.")
-        while (true) {
-            delay(1000)
-            emit("Ping")
-        }
+        /**
+         * TODO connect to the server using webSockets and emit incoming messages as they arrive
+         *  Hint: There are two kind-of approaches using [webSocketSession] or [webSocket].
+         */
     }
 
     override fun sendMessage(message: String) {
-        // TODO implement later using websockets
+        /**
+         * TODO implement sending a message to the server using webSockets
+         *   Hint: you need to use the session created in connect.
+         */
     }
 }
