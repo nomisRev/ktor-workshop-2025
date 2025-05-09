@@ -1,13 +1,25 @@
 package org.jetbrains.chat.repository
 
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.websocket.receiveDeserialized
+import io.ktor.client.plugins.websocket.sendSerialized
 import io.ktor.client.plugins.websocket.webSocket
 import io.ktor.client.plugins.websocket.webSocketSession
+import io.ktor.websocket.Frame
+import io.ktor.websocket.readText
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.consumeAsFlow
+import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
+import org.jetbrains.chat.viewmodel.Message
 
 interface ChatRepository {
     fun connect(): Flow<WebSocketMessage>
@@ -19,19 +31,23 @@ class WebSocketChatRepository(
     private val client: HttpClient,
     private val baseUrl: String,
     private val scope: CoroutineScope,
-) : ChatRepository {
+) : ChatRepository, AutoCloseable {
+    private val messages = Channel<String>()
     override fun connect(): Flow<WebSocketMessage> = flow {
-        /**
-         * TODO connect to the server using webSockets and emit incoming messages as they arrive
-         *  Hint: There are two kind-of approaches using [webSocketSession] or [webSocket].
-         */
+        client.webSocket(host = baseUrl, path = "/ws") {
+            launch { messages.consumeAsFlow().collect { send(Frame.Text(it)) } }
+            while (true) {
+                emit(receiveDeserialized<WebSocketMessage>())
+            }
+        }
     }
 
     override fun sendMessage(message: String) {
-        /**
-         * TODO implement sending a message to the server using webSockets
-         *   Hint: you need to use the session created in connect.
-         */
+        scope.launch { messages.send(message) }
+    }
+
+    override fun close() {
+        messages.close()
     }
 }
 

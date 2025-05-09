@@ -22,5 +22,5 @@ and personalized travel information to customers. You should:
 interface TravelService {
     @SystemMessage(SYSTEM_MESSAGE)
     @UserMessage("{{question}}")
-    fun answer(@MemoryId userId: String, @V("question") question: String): Flow<String>
+    fun answer(@MemoryId email: String, @V("question") question: String): Flow<String>
 }
