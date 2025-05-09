@@ -81,7 +81,8 @@ flyway = ["flyway-core", "flyway-postgresql"]
 ktor-client = [
     "ktor-client-content-negotiation",
     "ktor-client-cio",
-    "ktor-kotlinx-json"
+    "ktor-kotlinx-json",
+    "ktor-client-websockets"
 ]
 langchain4j = [
     "langchain4j",
