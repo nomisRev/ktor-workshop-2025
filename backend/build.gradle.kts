@@ -2,7 +2,6 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     alias(libs.plugins.kotlin.jvm)
-    alias(libs.plugins.kotlin.assert)
     alias(libs.plugins.ktor)
     alias(libs.plugins.kotlin.serialization)
 }
