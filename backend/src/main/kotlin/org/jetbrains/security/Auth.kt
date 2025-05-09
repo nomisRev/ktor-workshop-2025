@@ -48,7 +48,6 @@ fun Application.configureSecurity(config: AuthConfig) {
 }
 
 private fun Application.configureOAuth(config: AuthConfig) {
-    // https://ktor.io/docs/server-oauth.html
     authentication {
         oauth {
             urlProvider = { config.redirectUrl }

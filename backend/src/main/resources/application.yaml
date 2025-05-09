@@ -4,7 +4,7 @@ ktor:
             - org.jetbrains.ApplicationKt.configure
             - org.jetbrains.ApplicationKt.module
     deployment:
-      port: "$PORT:8000"
+      port: "$PORT:8080"
 database:
         driverClassName: "$DB_DRIVER_CLASS_NAME:org.h2.Driver"
         url: "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1"
@@ -18,7 +18,7 @@ auth:
   accessTokenUrl: "$AUTH_TOKEN_URL:https://oauth2.googleapis.com/token"
   clientId: "$AUTH_CLIENT_ID:ktor-app"
   clientSecret: "$AUTH_CLIENT_SECRET:<empty>"
-  redirectUrl: "$AUTH_REDIRECT_URL:http://localhost:8000/callback"
+  redirectUrl: "$AUTH_REDIRECT_URL:http://localhost:8080/callback"
   encryptionKey: "$AUTH_SESSION_CRYPT_KEY:b324d8a737c6cb016f2c1b6e3501ecb2"
   signKey: "$AUTH_SESSION_SIGN_KEY:59aa1b97d4baf65e1a95101aa35cff307fb9c9e653918f14e33736c2bd3362ca"
 ai:

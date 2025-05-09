@@ -1,7 +1,6 @@
 package org.jetbrains.app
 
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.install
 import io.ktor.server.http.content.staticResources
 import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.plugins.di.provideDelegate
@@ -12,7 +11,6 @@ import io.ktor.server.routing.application
 import io.ktor.server.routing.get
 import io.ktor.server.sessions.get
 import io.ktor.server.sessions.sessions
-import io.ktor.server.sse.SSE
 import io.ktor.server.sse.send
 import io.ktor.server.sse.sse
 import io.ktor.server.websocket.sendSerialized
@@ -24,6 +22,7 @@ import io.ktor.websocket.readText
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
@@ -61,17 +60,17 @@ fun Routing.configureChatRoutes() {
         val session = call.sessions.get<UserSession>()
         if (session == null) return@webSocket close(CloseReason(CloseReason.Codes.VIOLATED_POLICY, "No session"))
 
-        sendSerialized(PartialAnswer("Hey, I am your personal travel assistant. How may I help you today?"))
-        sendSerialized(AnswerEnd)
+        sendSerialized<Message>(PartialAnswer("Hey, I am your personal travel assistant. How may I help you today?"))
+        sendSerialized<Message>(AnswerEnd)
         incoming.consumeAsFlow().filterIsInstance<Frame.Text>().collect { frame ->
             val question = frame.readText()
             ai.answer(session.userId, question)
                 .catch { throwable ->
-                    sendSerialized(Message.Error("Something went wrong... Please refresh."))
+                    sendSerialized<Message>(Message.Error("Something went wrong... Please refresh."))
                     throwable.printStackTrace()
                 }
-                .collect { sendSerialized(PartialAnswer(it)) }
-            sendSerialized(AnswerEnd)
+                .collect { sendSerialized<Message>(PartialAnswer(it)) }
+            sendSerialized<Message>(AnswerEnd)
         }
     }
 
@@ -98,11 +97,14 @@ fun Routing.configureChatRoutes() {
 @Serializable
 sealed interface Message {
     @Serializable
+    @SerialName("partial_answer")
     data class PartialAnswer(val token: String) : Message
 
     @Serializable
+    @SerialName("answer_end")
     data object AnswerEnd : Message
 
     @Serializable
+    @SerialName("error")
     data class Error(val text: String) : Message
 }

@@ -6,6 +6,8 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.json
+import io.ktor.server.application.install
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation as ServerContentNegotiation
 import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.plugins.di.invoke
 import io.ktor.server.plugins.di.provide
@@ -19,6 +21,7 @@ import org.jetbrains.customers.Customer
 import org.jetbrains.customers.CustomerRepository
 import org.jetbrains.customers.CustomerWithBooking
 import org.jetbrains.customers.UpdateCustomer
+import org.jetbrains.customers.configureCustomerRoutes
 import org.junit.AfterClass
 import kotlin.test.Test
 
@@ -92,7 +95,8 @@ class ApplicationTest {
                 dependencies {
                     provide<CustomerRepository> { FakeCustomerRepository(fakeData) }
                 }
-                module()
+                install(ServerContentNegotiation) { json() }
+                configureCustomerRoutes()
             }
         }
 

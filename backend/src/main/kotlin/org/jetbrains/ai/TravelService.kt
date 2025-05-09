@@ -1,6 +1,5 @@
 package org.jetbrains.ai
 
-import dev.langchain4j.model.chat.StreamingChatLanguageModelReply
 import dev.langchain4j.service.MemoryId
 import dev.langchain4j.service.SystemMessage
 import dev.langchain4j.service.UserMessage
@@ -20,22 +19,8 @@ and personalized travel information to customers. You should:
 5. Maintain a friendly, professional tone that inspires confidence in your recommendations.
 """
 
-class TravelService(factory: LangChainFactory) {
-    private val chat: Chat = factory.service<Chat>()
-
-    fun answer(userId: String, question: String): Flow<String> =
-        chat.answer(userId, question)
-
-    private interface Chat {
-        @SystemMessage(SYSTEM_MESSAGE)
-        @UserMessage("{{question}}")
-        fun answer(@MemoryId userId: String, @V("question") question: String): Flow<String>
-
-        @SystemMessage(SYSTEM_MESSAGE)
-        @UserMessage("{{question}}")
-        fun example(
-            @MemoryId userId: Long,
-            @V("question") question: String,
-        ): Flow<StreamingChatLanguageModelReply>
-    }
+interface TravelService {
+    @SystemMessage(SYSTEM_MESSAGE)
+    @UserMessage("{{question}}")
+    fun answer(@MemoryId userId: String, @V("question") question: String): Flow<String>
 }

@@ -30,6 +30,7 @@ dependencies {
 
     testImplementation(libs.bundles.ktor.client)
     testImplementation(libs.bundles.testing)
+
 }
 
 tasks.getByName("processResources")

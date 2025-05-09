@@ -71,9 +71,17 @@ class ChatViewModel(private val repository: ChatRepository, private val scope: C
                     )
                 }
             } else {
-                TODO()
-//                val newMessage = Message(content = message, type = MessageType.AI, isComplete = false)
-//                state.copy(messages = state.messages + newMessage)
+                when (message) {
+                    WebSocketMessage.AnswerEnd -> state.copy(isLoading = false)
+                    is WebSocketMessage.Error -> state.copy(isLoading = false, error = message.text)
+                    is WebSocketMessage.PartialAnswer -> state.copy(
+                        messages = state.messages + Message(
+                            content = message.token,
+                            type = MessageType.AI,
+                            isComplete = false
+                        ),
+                    )
+                }
             }
         }
     }
