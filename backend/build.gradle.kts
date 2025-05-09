@@ -19,7 +19,7 @@ application {
 
 dependencies {
     implementation(libs.bundles.ktor.server)
-    implementation(libs.ktor.client.apache)
+    implementation(libs.ktor.client.cio)
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.bundles.exposed)
     implementation(libs.logback.classic)
