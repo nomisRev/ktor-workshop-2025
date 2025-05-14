@@ -16,8 +16,6 @@ import org.jetbrains.customers.CreateCustomer
 import org.jetbrains.customers.Customer
 import org.jetbrains.customers.CustomerRepository
 import org.jetbrains.customers.UpdateCustomer
-import org.jetbrains.customers.fake.FakeCustomerRepository
-import org.jetbrains.customers.UpdateCustomer
 import org.junit.AfterClass
 import kotlin.test.Test
 

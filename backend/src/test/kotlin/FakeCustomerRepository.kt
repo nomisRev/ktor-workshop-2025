@@ -10,20 +10,20 @@ import kotlin.random.Random
 class FakeCustomerRepository(private var storage: MutableList<Customer> = mutableListOf()) : CustomerRepository {
     private val seed = Random.Default
 
-    override fun findAll(): List<Customer> = storage
+    override suspend fun findAll(): List<Customer> = storage
 
-    override fun save(create: CreateCustomer): Customer {
+    override suspend fun save(create: CreateCustomer): Customer {
         val customer = Customer(seed.nextInt(), create.name, create.email, Clock.System.now())
         storage.add(customer)
         return customer
     }
 
-    override fun delete(id: Int): Boolean {
+    override suspend fun delete(id: Int): Boolean {
         val customer = storage.single { it.id == id }
         return storage.remove(customer)
     }
 
-    override fun update(
+    override suspend fun update(
         id: Int,
         updateCustomer: UpdateCustomer
     ): Customer? {
@@ -39,5 +39,5 @@ class FakeCustomerRepository(private var storage: MutableList<Customer> = mutabl
         return updated
     }
 
-    override fun find(id: Int): Customer? = storage.find { it.id == id }
+    override suspend fun find(id: Int): Customer? = storage.find { it.id == id }
 }
