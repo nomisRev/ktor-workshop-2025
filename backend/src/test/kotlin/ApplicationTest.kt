@@ -6,17 +6,12 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.json
-import io.ktor.server.plugins.di.dependencies
-import io.ktor.server.plugins.di.invoke
-import io.ktor.server.plugins.di.provide
+import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.testing.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
 import org.jetbrains.customers.CreateCustomer
 import org.jetbrains.customers.Customer
-import org.jetbrains.customers.CustomerRepository
-import org.jetbrains.customers.UpdateCustomer
-import org.jetbrains.customers.fake.FakeCustomerRepository
 import org.jetbrains.customers.UpdateCustomer
 import org.junit.AfterClass
 import kotlin.test.Test
@@ -74,11 +69,8 @@ class ApplicationTest {
         )
 
         val app = TestApplication {
-            application {
-                dependencies {
-                    provide<CustomerRepository> { FakeCustomerRepository(fakeData) }
-                }
-                module()
+            environment {
+                config = ApplicationConfig("application.yaml")
             }
         }
 

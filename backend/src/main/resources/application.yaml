@@ -7,10 +7,8 @@ ktor:
       port: "$PORT:8080"
 config:
     database:
-        driverClassName: "$DB_DRIVER_CLASS_NAME:org.h2.Driver"
-        url: "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1"
-        username: "$DB_USERNAME:root"
-        password: "$DB_PASSWORD:"
+        username: "sa"
+        password: ""
         flyway:
             locations: "$FLYWAY_LOCATIONS:classpath:db/migration"
             baselineOnMigrate: "$FLYWAY_BASELINE_ON_MIGRATE:true"
