@@ -9,8 +9,11 @@ import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.testing.*
 import kotlinx.coroutines.runBlocking
+import org.jetbrains.customers.Booking
+import org.jetbrains.customers.CreateBooking
 import org.jetbrains.customers.CreateCustomer
 import org.jetbrains.customers.Customer
+import org.jetbrains.customers.CustomerWithBooking
 import org.jetbrains.customers.UpdateCustomer
 import org.junit.AfterClass
 import kotlin.test.Test
@@ -40,12 +43,25 @@ class ApplicationTest {
             setBody(CreateCustomer(Uuid.random().toString(), "${Uuid.random()}@a.com"))
         }.body<Customer>()
 
+    @OptIn(ExperimentalUuidApi::class)
+    suspend fun createCustomerWithBooking(): CustomerWithBooking {
+        val customer = client.post("/customers") {
+            contentType(ContentType.Application.Json)
+            setBody(CreateCustomer(Uuid.random().toString(), "${Uuid.random()}@a.com"))
+        }.body<Customer>()
+        val booking = client.post("/customers/bookings/${customer.id}/create") {
+            contentType(ContentType.Application.Json)
+            setBody(CreateBooking(customer.id, 100.0))
+        }.body<Booking>()
+        return CustomerWithBooking(customer.id, customer.name, customer.email, customer.createdAt, listOf(booking))
+    }
+
     @Test
     fun `get all data`(): Unit = runBlocking {
-        val customer = createCustomer()
+        val customer = createCustomerWithBooking()
         val response = client.get("/customers")
         assert(response.status == HttpStatusCode.OK)
-        val data = response.body<List<Customer>>()
+        val data = response.body<List<CustomerWithBooking>>()
         assertTrue(data.contains(customer), "Expected $data to contain $customer")
     }
 

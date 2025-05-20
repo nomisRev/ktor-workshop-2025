@@ -54,6 +54,11 @@ fun Application.configureCustomerRoutes() {
                     }
                 }
             }
+            post("/bookings/{customerId}/create") {
+                val request = call.receive<CreateBooking>()
+                val booking = repository.createBooking(request.customerId, request.amount)
+                call.respond(HttpStatusCode.Created, booking)
+            }
         }
     }
 }

@@ -1,5 +1,3 @@
-@file:JvmName("CustomerRepositoryKt")
-
 package org.jetbrains.customers
 
 import io.ktor.server.application.Application
@@ -29,18 +27,36 @@ object Customers : IntIdTable("CUSTOMERS", "CUSTOMER_ID") {
     val createdAt = timestamp("CREATED_AT").defaultExpression(CurrentTimestamp)
 }
 
+object Bookings : IntIdTable("BOOKINGS", "BOOKING_ID") {
+    val customerId = reference("CUSTOMER_ID", Customers)
+    val bookingDate = timestamp("BOOKING_DATE").defaultExpression(CurrentTimestamp)
+    val amount = double("AMOUNT")
+}
+
 interface CustomerRepository {
-    suspend fun findAll(): List<Customer>
+    suspend fun findAll(): List<CustomerWithBooking>
     suspend fun save(create: CreateCustomer): Customer
-    suspend fun find(id: Int): Customer?
+    suspend fun createBooking(id: Int, amount: Double): Booking
+    suspend fun find(id: Int): CustomerWithBooking?
     suspend fun update(id: Int, updateCustomer: UpdateCustomer): Customer?
     suspend fun delete(id: Int): Boolean
 }
 
 class CustomerRepositoryImpl(private val database: Database) : CustomerRepository {
-    override suspend fun findAll(): List<Customer> = transaction(db = database) {
-        Customers.selectAll().map { it.toCustomer() }.toList()
+
+    override suspend fun findAll(): List<CustomerWithBooking> = transaction(db = database) {
+        Customers.selectAll()
+            .map { row -> row.toCustomerWithBooking() }.toList()
     }
+
+    override suspend fun createBooking(id: Int, amount: Double): Booking =
+        transaction(db = database) {
+            val id = Bookings.insertAndGetId {
+                it[Bookings.customerId] = id
+                it[Bookings.amount] = amount
+            }
+            Bookings.selectAll().where { Bookings.id eq id }.single().toBooking()
+        }
 
     override suspend fun save(create: CreateCustomer): Customer = transaction(db = database) {
         val id = Customers.insertAndGetId { insert ->
@@ -50,9 +66,12 @@ class CustomerRepositoryImpl(private val database: Database) : CustomerRepositor
         Customers.selectAll().where { Customers.id eq id }.single().toCustomer()
     }
 
-    override suspend fun find(id: Int): Customer? =
+    override suspend fun find(id: Int): CustomerWithBooking? =
         transaction(db = database) {
-            Customers.selectAll().where { Customers.id eq id }.singleOrNull()?.toCustomer()
+            Customers.selectAll()
+                .where { Customers.id eq id }
+                .singleOrNull()
+                ?.toCustomerWithBooking()
         }
 
     override suspend fun update(id: Int, updateCustomer: UpdateCustomer): Customer? =
@@ -74,4 +93,28 @@ class CustomerRepositoryImpl(private val database: Database) : CustomerRepositor
             email = this[Customers.email],
             createdAt = this[Customers.createdAt],
         )
+
+    private fun ResultRow.toBooking(): Booking =
+        Booking(
+            id = this[Bookings.id].value,
+            customerId = this[Bookings.customerId].value,
+            bookingDate = this[Bookings.bookingDate],
+            amount = this[Bookings.amount],
+        )
+
+    private fun ResultRow.toCustomerWithBooking(): CustomerWithBooking {
+        val customerId = this[Customers.id].value
+        val bookings = Bookings.selectAll()
+            .where { Bookings.customerId eq customerId }
+            .map { it.toBooking() }
+            .toList()
+
+        return CustomerWithBooking(
+            id = customerId,
+            name = this[Customers.name],
+            email = this[Customers.email],
+            createdAt = this[Customers.createdAt],
+            bookings = bookings
+        )
+    }
 }
