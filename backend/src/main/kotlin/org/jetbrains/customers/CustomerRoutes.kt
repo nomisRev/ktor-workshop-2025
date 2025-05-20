@@ -3,7 +3,6 @@ package org.jetbrains.customers
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.di.dependencies
-import io.ktor.server.plugins.di.provideDelegate
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
