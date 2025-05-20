@@ -14,6 +14,7 @@ import org.jetbrains.app.configureChatRoutes
 import org.jetbrains.customers.configureCustomerRoutes
 import org.jetbrains.customers.customerDataModule
 import org.jetbrains.plugins.DbConfig
+import org.jetbrains.plugins.aiModule
 import org.jetbrains.plugins.setupDatabase
 import org.jetbrains.security.configureSecurity
 
@@ -22,6 +23,7 @@ fun main(args: Array<String>) = EngineMain.main(args)
 fun Application.configure() {
     setupDatabase(property<DbConfig>("config.database"))
     configureSecurity(property("config.auth"))
+    aiModule(property("config.ai"))
     customerDataModule()
 }
 

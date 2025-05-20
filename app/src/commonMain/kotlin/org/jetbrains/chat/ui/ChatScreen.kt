@@ -18,8 +18,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.websocket.WebSockets
+import io.ktor.serialization.kotlinx.KotlinxWebsocketSerializationConverter
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.polymorphic
 import org.jetbrains.chat.repository.WebSocketChatRepository
+import org.jetbrains.chat.repository.WebSocketMessage
 import org.jetbrains.chat.viewmodel.ChatViewModel
 import org.jetbrains.chat.viewmodel.Message
 import org.jetbrains.chat.viewmodel.MessageType
@@ -28,7 +33,21 @@ import org.jetbrains.chat.viewmodel.MessageType
 @Composable
 fun ChatScreen() {
     val scope = rememberCoroutineScope()
-    val httpClient = remember { HttpClient { install(WebSockets) } }
+    val httpClient = remember {
+        HttpClient {
+            install(WebSockets) {
+                contentConverter = KotlinxWebsocketSerializationConverter(Json {
+                    serializersModule = SerializersModule {
+                        polymorphic(WebSocketMessage::class) {
+                            subclass(WebSocketMessage.PartialAnswer::class, WebSocketMessage.PartialAnswer.serializer())
+                            subclass(WebSocketMessage.AnswerEnd::class, WebSocketMessage.AnswerEnd.serializer())
+                            subclass(WebSocketMessage.Error::class, WebSocketMessage.Error.serializer())
+                        }
+                    }
+                })
+            }
+        }
+    }
     val repository = remember { WebSocketChatRepository(httpClient, "localhost:8000", scope) }
     val viewModel = remember { ChatViewModel(repository, scope) }
     val state by viewModel.state.collectAsState()
