@@ -1,4 +1,4 @@
-package org.jetbrains.customers.fake
+package org.jetbrains
 
 import kotlinx.datetime.Clock
 import org.jetbrains.customers.CreateCustomer
