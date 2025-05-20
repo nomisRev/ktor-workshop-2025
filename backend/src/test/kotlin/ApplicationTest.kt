@@ -25,7 +25,7 @@ import kotlin.uuid.Uuid
 class ApplicationTest {
     @Test
     fun testRoot() = runBlocking {
-        val response = client.get("/")
+        val response = client.get("/health")
         assertEquals(HttpStatusCode.OK, response.status)
     }
 
