@@ -39,5 +39,7 @@ class FakeCustomerRepository(private var storage: MutableList<Customer> = mutabl
         return updated
     }
 
+    override suspend fun get(id: Int): Customer = storage.first { it.id == id }
+
     override suspend fun find(id: Int): Customer? = storage.find { it.id == id }
 }

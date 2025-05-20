@@ -1,12 +1,12 @@
 package org.jetbrains
 
-import io.ktor.client.call.body
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.call.*
+import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
-import io.ktor.client.statement.bodyAsText
+import io.ktor.client.statement.*
 import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.json
-import io.ktor.server.config.ApplicationConfig
+import io.ktor.serialization.kotlinx.json.*
+import io.ktor.server.config.*
 import io.ktor.server.testing.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
@@ -14,7 +14,9 @@ import org.jetbrains.customers.CreateCustomer
 import org.jetbrains.customers.Customer
 import org.jetbrains.customers.UpdateCustomer
 import org.junit.AfterClass
+import org.junit.Before
 import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class ApplicationTest {
     @Test
@@ -22,7 +24,7 @@ class ApplicationTest {
         val response = client.get("/customers")
         assert(response.status == HttpStatusCode.OK)
         val data = response.body<List<Customer>>()
-        assert(data.size == fakeData.size)
+        assertEquals(fakeData.size, data.size)
     }
 
     @Test
@@ -39,7 +41,8 @@ class ApplicationTest {
 
     @Test
     fun `put data instance`(): Unit = runBlocking {
-        val customer = fakeData.first()
+        val customer = client.get("/customers").body<List<Customer>>().first()
+
         val response = client.put("/customers/${customer.id}") {
             contentType(ContentType.Application.Json)
             setBody(UpdateCustomer(name = "Mr. ${customer.name}"))
@@ -52,13 +55,34 @@ class ApplicationTest {
 
     @Test
     fun `delete data instance`(): Unit = runBlocking {
-        val response1 = client.delete("/customers/1")
+        val customer = client.post("/customers") {
+            contentType(ContentType.Application.Json)
+            setBody(CreateCustomer("A", "a@a.com"))
+        }.body<Customer>()
+
+        val response1 = client.delete("/customers/${customer.id}")
         assert(response1.status == HttpStatusCode.OK)
         assert(response1.bodyAsText() == "Data deleted successfully")
 
-        val response2 = client.get("/customers/1")
+        val response2 = client.delete("/customers/${customer.id}")
         // Assertions to confirm the successful fetching of the updated Data instances
         assert(response2.status == HttpStatusCode.NotFound)
+    }
+
+    @Before
+    fun initiateData() = runBlocking {
+        println("Post all the fake customers")
+
+        client.get("/customers").body<List<Customer>>().forEach { customer ->
+            client.delete("/customers/${customer.id}")
+        }
+
+        fakeData.forEach { customer ->
+            client.post("/customers") {
+                contentType(ContentType.Application.Json)
+                setBody(CreateCustomer(customer.name, customer.email))
+            }
+        }
     }
 
     companion object {

@@ -2,9 +2,8 @@
 
 package org.jetbrains.customers
 
-import io.ktor.server.application.Application
-import io.ktor.server.plugins.di.dependencies
-import io.ktor.server.plugins.di.resolve
+import io.ktor.server.application.*
+import io.ktor.server.plugins.di.*
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.singleOrNull
@@ -14,16 +13,11 @@ import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.datetime.CurrentTimestamp
 import org.jetbrains.exposed.v1.datetime.timestamp
-import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
-import org.jetbrains.exposed.v1.r2dbc.deleteWhere
-import org.jetbrains.exposed.v1.r2dbc.insertReturning
-import org.jetbrains.exposed.v1.r2dbc.selectAll
-import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
-import org.jetbrains.exposed.v1.r2dbc.updateReturning
+import org.jetbrains.exposed.v1.r2dbc.*
 
 fun Application.customerDataModule() {
     dependencies {
-        provide<CustomerRepository> { CustomerRepositoryImpl(resolve()) }
+        provide<CustomerRepository> { CustomerRepositoryImpl() }
     }
 }
 
@@ -36,38 +30,43 @@ object Customers : IntIdTable("customers", "customer_id") {
 interface CustomerRepository {
     suspend fun findAll(): List<Customer>
     suspend fun save(create: CreateCustomer): Customer
+    suspend fun get(id: Int): Customer
     suspend fun find(id: Int): Customer?
     suspend fun update(id: Int, updateCustomer: UpdateCustomer): Customer?
     suspend fun delete(id: Int): Boolean
 }
 
-class CustomerRepositoryImpl(private val database: R2dbcDatabase) : CustomerRepository {
-    override suspend fun findAll(): List<Customer> = suspendTransaction(db = database) {
-        Customers.selectAll().map { it.toCustomer() }.toList()
+class CustomerRepositoryImpl : CustomerRepository {
+    override suspend fun findAll(): List<Customer> {
+        return Customers.selectAll().map { it.toCustomer() }.toList()
     }
 
-    override suspend fun save(create: CreateCustomer): Customer = suspendTransaction(db = database) {
-        Customers.insertReturning {insert ->
-            insert[Customers.name] = name
-            insert[Customers.email] = email
-        }.single().toCustomer()
+    override suspend fun save(create: CreateCustomer): Customer {
+        return Customers.insertAndGetId { insert ->
+            insert[Customers.name] = create.name
+            insert[Customers.email] = create.email
+        }.let { get(it.value) }
     }
 
-    override suspend fun find(id: Int): Customer? =
-        suspendTransaction(db = database) {
-            Customers.selectAll().where { Customers.id eq id }.singleOrNull()?.toCustomer()
-        }
+    override suspend fun get(id: Int): Customer {
+        return Customers.selectAll().where { Customers.id eq id }.single().toCustomer()
+    }
 
-    override suspend fun update(id: Int, updateCustomer: UpdateCustomer): Customer? =
-        suspendTransaction(db = database) {
-            Customers.updateReturning(where = { Customers.id eq id }) {update ->
-                if (updateCustomer.name != null) update[Customers.name] = updateCustomer.name
-                if (updateCustomer.email != null) update[Customers.email] = updateCustomer.email
-            }.singleOrNull()?.toCustomer()
+    override suspend fun find(id: Int): Customer? {
+        return Customers.selectAll().where { Customers.id eq id }.singleOrNull()?.toCustomer()
+    }
+
+    override suspend fun update(id: Int, updateCustomer: UpdateCustomer): Customer? {
+        Customers.update(where = { Customers.id eq id }) { update ->
+            if (updateCustomer.name != null) update[Customers.name] = updateCustomer.name
+            if (updateCustomer.email != null) update[Customers.email] = updateCustomer.email
         }
+        return get(id)
+    }
+
 
     override suspend fun delete(id: Int): Boolean =
-        suspendTransaction(db = database) { Customers.deleteWhere { Customers.id eq id } > 0 }
+        Customers.deleteWhere { Customers.id eq id } > 0
 
     private fun ResultRow.toCustomer(): Customer =
         Customer(
