@@ -23,24 +23,40 @@ fun Application.customerDataModule() {
     }
 }
 
-object Customers : IntIdTable("customers", "customer_id") {
+object Customers : IntIdTable("CUSTOMERS", "CUSTOMER_ID") {
     val name = varchar("NAME", 255)
     val email = varchar("EMAIL", 255).uniqueIndex()
     val createdAt = timestamp("CREATED_AT").defaultExpression(CurrentTimestamp)
 }
 
+object Bookings : IntIdTable("BOOKINGS", "BOOKING_ID") {
+    val customerId = reference("CUSTOMER_ID", Customers)
+    val bookingDate = timestamp("BOOKING_DATE").defaultExpression(CurrentTimestamp)
+    val amount = double("AMOUNT")
+}
+
 interface CustomerRepository {
-    suspend fun findAll(): List<Customer>
+    suspend fun findAll(): List<CustomerWithBooking>
     suspend fun save(create: CreateCustomer): Customer
-    suspend fun find(id: Int): Customer?
+    suspend fun createBooking(id: Int, amount: Double): Booking
+    suspend fun find(id: Int): CustomerWithBooking?
     suspend fun update(id: Int, updateCustomer: UpdateCustomer): Customer?
     suspend fun delete(id: Int): Boolean
 }
 
 class CustomerRepositoryImpl(private val database: R2dbcDatabase) : CustomerRepository {
-    override suspend fun findAll(): List<Customer> =  suspendTransaction(Dispatchers.IO, db = database) {
-        Customers.selectAll().map { it.toCustomer() }.toList()
+    override suspend fun findAll(): List<CustomerWithBooking> =  suspendTransaction(Dispatchers.IO, db = database) {
+        Customers.selectAll().map { it.toCustomerWithBooking() }.toList()
     }
+
+    override suspend fun createBooking(id: Int, amount: Double): Booking =
+        suspendTransaction(Dispatchers.IO, db = database) {
+            val id = Bookings.insertAndGetId {
+                it[Bookings.customerId] = id
+                it[Bookings.amount] = amount
+            }
+            Bookings.selectAll().where { Bookings.id eq id }.single().toBooking()
+        }
 
     override suspend fun save(create: CreateCustomer): Customer =
         suspendTransaction(Dispatchers.IO, db = database) {
@@ -51,8 +67,8 @@ class CustomerRepositoryImpl(private val database: R2dbcDatabase) : CustomerRepo
             Customers.selectAll().where { Customers.id eq id }.single().toCustomer()
         }
 
-    override suspend fun find(id: Int): Customer? = suspendTransaction(Dispatchers.IO, db = database) {
-        Customers.selectAll().where { Customers.id eq id }.singleOrNull()?.toCustomer()
+    override suspend fun find(id: Int): CustomerWithBooking? = suspendTransaction(Dispatchers.IO, db = database) {
+        Customers.selectAll().where { Customers.id eq id }.singleOrNull()?.toCustomerWithBooking()
     }
 
     override suspend fun update(id: Int, updateCustomer: UpdateCustomer): Customer? =
@@ -76,4 +92,28 @@ class CustomerRepositoryImpl(private val database: R2dbcDatabase) : CustomerRepo
             email = this[Customers.email],
             createdAt = this[Customers.createdAt],
         )
+
+    private fun ResultRow.toBooking(): Booking =
+        Booking(
+            id = this[Bookings.id].value,
+            customerId = this[Bookings.customerId].value,
+            bookingDate = this[Bookings.bookingDate],
+            amount = this[Bookings.amount],
+        )
+
+    private suspend fun ResultRow.toCustomerWithBooking(): CustomerWithBooking {
+        val customerId = this[Customers.id].value
+        val bookings = Bookings.selectAll()
+            .where { Bookings.customerId eq customerId }
+            .map { it.toBooking() }
+            .toList()
+
+        return CustomerWithBooking(
+            id = customerId,
+            name = this[Customers.name],
+            email = this[Customers.email],
+            createdAt = this[Customers.createdAt],
+            bookings = bookings
+        )
+    }
 }
