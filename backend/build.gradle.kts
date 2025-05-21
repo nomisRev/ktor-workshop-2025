@@ -8,11 +8,17 @@ plugins {
 
 group = "org.jetbrains"
 version = "0.0.1"
-application.mainClass = "io.ktor.server.netty.EngineMain"
+
+val isDevelopment: Boolean = project.ext.has("development")
+
+application {
+    mainClass = "io.ktor.server.netty.EngineMain"
+    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
+}
 
 dependencies {
     implementation(libs.bundles.ktor.server)
-    implementation(libs.ktor.client.apache)
+    implementation(libs.ktor.client.cio)
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.bundles.exposed)
     implementation(libs.logback.classic)
@@ -24,6 +30,13 @@ dependencies {
     testImplementation(libs.bundles.ktor.client)
     testImplementation(libs.bundles.testing)
 }
+
+tasks.getByName("processResources")
+    .dependsOn(
+        project(":app")
+            .tasks
+            .getByName(if (isDevelopment) "buildDevWebsite" else "buildProdWebsite")
+    )
 
 tasks {
     withType<KotlinCompile> {

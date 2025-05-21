@@ -4,11 +4,14 @@ ktor:
             - org.jetbrains.ApplicationKt.configure
             - org.jetbrains.ApplicationKt.module
     deployment:
-      port: "$PORT:8080"
+        port: 8080
 config:
-    database:
-        username: "sa"
-        password: ""
-        flyway:
-            locations: "$FLYWAY_LOCATIONS:classpath:db/migration"
-            baselineOnMigrate: "$FLYWAY_BASELINE_ON_MIGRATE:true"
+  database:
+    username: "sa"
+    password: ""
+    flyway:
+      locations: "$FLYWAY_LOCATIONS:classpath:db/migration"
+      baselineOnMigrate: "$FLYWAY_BASELINE_ON_MIGRATE:true"
+  auth:
+    encryptionKey: "$AUTH_SESSION_CRYPT_KEY:b324d8a737c6cb016f2c1b6e3501ecb2"
+    signKey: "$AUTH_SESSION_SIGN_KEY:59aa1b97d4baf65e1a95101aa35cff307fb9c9e653918f14e33736c2bd3362ca"
