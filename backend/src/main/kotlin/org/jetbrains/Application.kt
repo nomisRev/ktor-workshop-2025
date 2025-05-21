@@ -10,6 +10,7 @@ import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
+import org.jetbrains.app.configureChatRoutes
 import org.jetbrains.customers.configureCustomerRoutes
 import org.jetbrains.customers.customerDataModule
 import org.jetbrains.plugins.setupDatabase
@@ -31,5 +32,6 @@ fun Application.module() {
             call.respondText("Hello World!")
         }
         configureCustomerRoutes()
+        configureChatRoutes()
     }
 }
