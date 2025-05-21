@@ -7,13 +7,14 @@ hikari = "6.2.1"
 postgresql = "42.7.1"
 testcontainers = "1.19.3"
 kotlinx-datetime = "0.5.0"
-langchain4j = "1.0.0-beta2"
 flyway = "11.8.0"
 micrometer = "1.12.2"
 androidx-lifecycle = "2.8.4"
 compose-multiplatform = "1.7.3"
 kotlinx-coroutines = "1.9.0"
-langchain4j-kotlin = "0.1.8"
+langchain4j = "1.0.0-rc1"
+langchain4j-embeddings = "1.0.0-beta4"
+langchain4j-kotlin = "0.1.12"
 h2database = "1.0.0.RELEASE"
 postgresql-r2dbc = "1.0.7.RELEASE"
 
@@ -23,10 +24,8 @@ kotlinx-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core",
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
 
 langchain4j = { module = "dev.langchain4j:langchain4j", version.ref = "langchain4j" }
-langchain4j-embeddings = { module = "dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2-q", version.ref = "langchain4j" }
 langchain4j-openai = { module = "dev.langchain4j:langchain4j-open-ai", version.ref = "langchain4j" }
-langchain4j-ollama = { module = "dev.langchain4j:langchain4j-ollama", version.ref = "langchain4j" }
-langchain4j-pdf = { module = "dev.langchain4j:langchain4j-document-parser-apache-pdfbox", version.ref = "langchain4j" }
+langchain4j-embeddings = { module = "dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2-q", version.ref = "langchain4j-embeddings" }
 lanchain4j-kotlin = { module = "me.kpavlov.langchain4j.kotlin:langchain4j-kotlin", version.ref = "langchain4j-kotlin" }
 
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
@@ -83,14 +82,13 @@ flyway = ["flyway-core", "flyway-postgresql"]
 ktor-client = [
     "ktor-client-content-negotiation",
     "ktor-client-cio",
-    "ktor-kotlinx-json"
+    "ktor-kotlinx-json",
+    "ktor-client-websockets"
 ]
 langchain4j = [
     "langchain4j",
     "langchain4j-embeddings",
     "langchain4j-openai",
-    "langchain4j-ollama",
-    "langchain4j-pdf",
     "lanchain4j-kotlin"
 ]
 ktor-server = [

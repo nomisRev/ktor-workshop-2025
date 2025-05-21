@@ -14,12 +14,21 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.websocket.WebSockets
-import kotlinx.coroutines.launch
+import io.ktor.serialization.kotlinx.KotlinxWebsocketSerializationConverter
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.polymorphic
 import org.jetbrains.chat.repository.WebSocketChatRepository
+import org.jetbrains.chat.repository.WebSocketMessage
 import org.jetbrains.chat.viewmodel.ChatViewModel
 import org.jetbrains.chat.viewmodel.Message
 import org.jetbrains.chat.viewmodel.MessageType
@@ -28,8 +37,22 @@ import org.jetbrains.chat.viewmodel.MessageType
 @Composable
 fun ChatScreen() {
     val scope = rememberCoroutineScope()
-    val httpClient = remember { HttpClient { install(WebSockets) } }
-    val repository = remember { WebSocketChatRepository(httpClient, "localhost:8000", scope) }
+    val httpClient = remember {
+        HttpClient {
+            install(WebSockets) {
+                contentConverter = KotlinxWebsocketSerializationConverter(Json {
+                    serializersModule = SerializersModule {
+                        polymorphic(WebSocketMessage::class) {
+                            subclass(WebSocketMessage.PartialAnswer::class, WebSocketMessage.PartialAnswer.serializer())
+                            subclass(WebSocketMessage.AnswerEnd::class, WebSocketMessage.AnswerEnd.serializer())
+                            subclass(WebSocketMessage.Error::class, WebSocketMessage.Error.serializer())
+                        }
+                    }
+                })
+            }
+        }
+    }
+    val repository = remember { WebSocketChatRepository(httpClient, "localhost:8080", scope) }
     val viewModel = remember { ChatViewModel(repository, scope) }
     val state by viewModel.state.collectAsState()
 
@@ -167,14 +190,19 @@ private fun MessageInput(
     modifier: Modifier = Modifier,
 ) {
     var text by remember { mutableStateOf("") }
-    val scope = rememberCoroutineScope()
 
     Row(modifier = modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         TextField(
             value = text,
             onValueChange = { text = it },
             placeholder = { Text("Type a message...") },
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f).onKeyEvent {
+                if (it.key == Key.Enter && it.type == KeyEventType.KeyDown) {
+                    onSendMessage(text)
+                    text = ""
+                    true
+                } else false
+            },
             enabled = !isLoading,
             singleLine = true,
         )
@@ -184,10 +212,8 @@ private fun MessageInput(
         IconButton(
             onClick = {
                 if (text.isNotBlank()) {
-                    scope.launch {
-                        onSendMessage(text)
-                        text = ""
-                    }
+                    onSendMessage(text)
+                    text = ""
                 }
             },
             enabled = text.isNotBlank() && !isLoading,

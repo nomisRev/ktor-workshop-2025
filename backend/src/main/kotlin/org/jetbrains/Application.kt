@@ -13,12 +13,16 @@ import io.ktor.server.routing.routing
 import org.jetbrains.app.configureChatRoutes
 import org.jetbrains.customers.configureCustomerRoutes
 import org.jetbrains.customers.customerDataModule
+import org.jetbrains.plugins.aiModule
 import org.jetbrains.plugins.setupDatabase
+import org.jetbrains.security.configureSecurity
 
 fun main(args: Array<String>) = EngineMain.main(args)
 
 fun Application.configure() {
     setupDatabase(property("config.database"))
+    configureSecurity(property("config.auth"))
+    aiModule(property("config.ai"))
     customerDataModule()
 }
 
@@ -28,7 +32,7 @@ fun Application.module() {
         get("/json") {
             call.respond(mapOf("hello" to "world"))
         }
-        get("/") {
+        get("/health") {
             call.respondText("Hello World!")
         }
         configureCustomerRoutes()
