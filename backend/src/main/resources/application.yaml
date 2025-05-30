@@ -15,11 +15,16 @@ config:
   auth:
     encryptionKey: "$AUTH_SESSION_CRYPT_KEY:b324d8a737c6cb016f2c1b6e3501ecb2"
     signKey: "$AUTH_SESSION_SIGN_KEY:59aa1b97d4baf65e1a95101aa35cff307fb9c9e653918f14e33736c2bd3362ca"
+    name: "$AUTH_NAME:keycloak"
+    authorizeUrl: "$AUTH_URL:http://localhost:8000/realms/ktor-keycloak-example/protocol/openid-connect/auth"
+    accessTokenUrl: "$AUTH_TOKEN_URL:http://localhost:8000/realms/ktor-keycloak-example/protocol/openid-connect/token"
+    issuer: "$AUTH_ISSUER:http://localhost:8000/realms/ktor-keycloak-example"
+    certUrl: "$AUTH_CERT_URL:http://localhost:8000/realms/ktor-keycloak-example/protocol/openid-connect/certs"
     clientId: "$AUTH_CLIENT_ID:ktor-app"
-    clientSecret: "$AUTH_CLIENT_SECRET:<empty>"
+    clientSecret: "$AUTH_CLIENT_SECRET:keycloack_client_secret"
   ai:
     baseUrl: "$AI_BASE_URL:http://localhost:11434"
     apiKey: "$AI_API_KEY:not-needed-for-local-llama"
-    model: "$AI_MODEL:gpt-4o-mini"
+    model: "$AI_MODEL:llama3"
     maxSegmentSizeInTokens: "$AI_MAX_SEGMENT_SIZE:550"
     maxOverlapSizeInTokens: "$AI_MAX_OVERLAP_SIZE:50"

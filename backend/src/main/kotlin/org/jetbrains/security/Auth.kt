@@ -35,10 +35,15 @@ import kotlin.time.Duration.Companion.minutes
 
 @Serializable
 data class AuthConfig(
+    val name: String,
     val encryptionKey: String,
     val signKey: String,
     val clientId: String,
     val clientSecret: String,
+    val authorizeUrl: String,
+    val accessTokenUrl: String,
+    val issuer: String,
+    val certUrl: String,
 )
 
 @Serializable
@@ -56,9 +61,9 @@ private fun Application.configureOAuth(config: AuthConfig) {
             urlProvider = { "http://localhost:8080/callback" }
             providerLookup = {
                 OAuthServerSettings.OAuth2ServerSettings(
-                    name = "google",
-                    authorizeUrl = "https://accounts.google.com/o/oauth2/auth",
-                    accessTokenUrl = "https://oauth2.googleapis.com/token",
+                    name = config.name,
+                    authorizeUrl = config.authorizeUrl,
+                    accessTokenUrl = config.accessTokenUrl,
                     requestMethod = HttpMethod.Post,
                     clientId = config.clientId,
                     clientSecret = config.clientSecret,
@@ -76,11 +81,10 @@ private fun Application.configureOAuth(config: AuthConfig) {
             }
 
             get("/callback") {
-                val principal: OAuth2? = call.authentication.principal()
-                val email = principal?.extraParameters["id_token"]
-                    ?.let(JWT::decode)
-                    ?.getClaim("email")
-                    ?.asString() ?: return@get call.respond(Unauthorized)
+                val principal: OAuth2 = call.authentication.principal() ?: return@get call.respond(Unauthorized)
+
+                val email = JWT.decode(principal.accessToken)
+                    .claims["email"]?.asString() ?: return@get call.respond(Unauthorized)
 
                 call.sessions.set(UserSession(email))
                 call.respondRedirect("/")
@@ -102,20 +106,20 @@ private fun Application.configureSession(config: AuthConfig) {
     }
 }
 
+
 private fun Application.configureJwt(config: AuthConfig) {
     authentication {
         jwt("jwt") {
             val provider =
-                JwkProviderBuilder(URL("https://www.googleapis.com/oauth2/v3/certs"))
+                JwkProviderBuilder(URL(config.certUrl))
                     .cached(10, 24, TimeUnit.HOURS)
                     .rateLimited(10, 1, TimeUnit.MINUTES)
                     .build()
 
-            verifier(provider, "https://accounts.google.com")
+            verifier(provider, config.issuer)
             validate { credential ->
-                val isCorrect = credential.audience.single() == config.clientId
                 val email = credential.payload.claims["email"]?.asString()
-                if (isCorrect && email != null) UserSession(email) else null
+                if (email != null) UserSession(email) else null
             }
         }
     }

@@ -8,6 +8,21 @@ Here are some useful links to get you started:
 - [Ktor GitHub page](https://github.com/ktorio/ktor)
 - The [Ktor Slack chat](https://slack-chats.kotlinlang.org/c/ktor).
 
+The solution is available on the `solution` branch, to run the project:
+```shell
+docker-compose up -d
+./gradlew run
+```
+
+Visit [`http://localhost:8080`](http://localhost:8080) from any browser. Log in using:
+username: ktor_user
+password: ktor_password
+
+If you have Ollama running with `llama3` then it'll automatically connect, otherwise it'll use some stubbed impl.
+You can change the model in `backend/src/main/resources/application.yaml`.
+
+The slides are also available on the `solution` branch.
+
 ## Branches
 
 - main: Initial state. Generated using [start.ktor.io](https://start.ktor.io/settings?name=kotlinconf&website=jetbrains.org&artifact=org.jetbrains.kotlinconf&kotlinVersion=2.1.10&ktorVersion=3.1.2&buildSystem=GRADLE_KTS&buildSystemArgs.version_catalog=true&engine=NETTY&configurationIn=YAML&addSampleCode=true&plugins=routing).

@@ -24,7 +24,7 @@ kotlinx-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core",
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
 
 langchain4j = { module = "dev.langchain4j:langchain4j", version.ref = "langchain4j" }
-langchain4j-openai = { module = "dev.langchain4j:langchain4j-open-ai", version.ref = "langchain4j" }
+langchain4j-ollama = { module = "dev.langchain4j:langchain4j-ollama", version = "1.0.1-beta6" }
 langchain4j-embeddings = { module = "dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2-q", version.ref = "langchain4j-embeddings" }
 lanchain4j-kotlin = { module = "me.kpavlov.langchain4j.kotlin:langchain4j-kotlin", version.ref = "langchain4j-kotlin" }
 
@@ -88,7 +88,7 @@ ktor-client = [
 langchain4j = [
     "langchain4j",
     "langchain4j-embeddings",
-    "langchain4j-openai",
+    "langchain4j-ollama",
     "lanchain4j-kotlin"
 ]
 ktor-server = [

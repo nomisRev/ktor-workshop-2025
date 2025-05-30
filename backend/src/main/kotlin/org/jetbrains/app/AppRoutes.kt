@@ -25,6 +25,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
+import org.jetbrains.ai.FallbackTravelService
 import org.jetbrains.ai.TravelService
 import org.jetbrains.security.UserSession
 
@@ -54,15 +55,15 @@ fun Routing.configureChatRoutes() {
         incoming.consumeAsFlow()
             .filterIsInstance<Frame.Text>()
             .collect { frame ->
-            val question = frame.readText()
-            travelService.answer(session.email, question)
-                .catch { throwable ->
-                    sendSerialized<Message>(Message.Error("Something went wrong... Please refresh."))
-                    throwable.printStackTrace()
-                }
-                .collect { sendSerialized<Message>(Message.PartialAnswer(it)) }
-            sendSerialized<Message>(Message.AnswerEnd)
-        }
+                val question = frame.readText()
+                travelService.answer(session.email, question)
+                    .catch { throwable ->
+                        sendSerialized<Message>(Message.Error("Something went wrong... Please refresh."))
+                        throwable.printStackTrace()
+                    }
+                    .collect { sendSerialized<Message>(Message.PartialAnswer(it)) }
+                sendSerialized<Message>(Message.AnswerEnd)
+            }
     }
 
     sse("/chat", { _, value -> Json.encodeToString(serializer(), value as Message) }) {

@@ -1,0 +1,39 @@
+{
+  "realm": "ktor-keycloak-example",
+  "enabled": true,
+  "clients": [
+    {
+      "clientId": "ktor-app",
+      "directAccessGrantsEnabled": true,
+      "publicClient": false,
+      "secret": "keycloack_client_secret",
+      "redirectUris": ["http://localhost:8080/callback"],
+      "webOrigins": ["http://localhost:8080"]
+    }
+  ],
+  "users": [
+    {
+      "username": "ktor_user",
+      "enabled": true,
+      "email": "ktor_user@example.com",
+      "firstName": "Ktor",
+      "lastName": "User",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "ktor_password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["user"]
+    }
+  ],
+  "roles": {
+    "realm": [
+      {
+        "name": "user",
+        "description": "Regular user with standard permissions"
+      }
+    ]
+  }
+}
